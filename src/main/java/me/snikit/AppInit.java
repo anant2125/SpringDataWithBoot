@@ -1,53 +1,76 @@
 package me.snikit;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+import org.springframework.transaction.annotation.Transactional;
+
+import me.snikit.entity.Book;
+import me.snikit.entity.BookCategory;
+import me.snikit.entity.Todo;
+import me.snikit.repo.BookCategoryRepo;
+import me.snikit.repo.TodoRepo;
 
 @SpringBootApplication
-public class AppInit {
+public class AppInit implements CommandLineRunner {
+	private static final Logger logger = LoggerFactory.getLogger(AppInit.class);
 
-	private static final Logger log = LoggerFactory.getLogger(AppInit.class);
+	@Autowired
+	private BookCategoryRepo bookCategoryRepository;
 
-	public static void main(String[] args) throws Exception {
+	@Autowired
+	private TodoRepo todoRepo;
+
+	public static void main(String[] args) {
 		SpringApplication.run(AppInit.class, args);
 	}
 
-	@Bean
-	public CommandLineRunner demo(CustomerRepo repository) {
-		return (args) -> {
-			// save a couple of customers
-			repository.save(new Customer("Jack", "Bauer"));
-			repository.save(new Customer("Chloe", "O'Brian"));
-			repository.save(new Customer("Kim", "Bauer"));
-			repository.save(new Customer("David", "Palmer"));
-			repository.save(new Customer("Michelle", "Dessler"));
+	@Override
+	@Transactional
+	public void run(String... strings) throws Exception {
 
-			// fetch all customers
-			log.info("Customers found with findAll():");
-			log.info("-------------------------------");
-			for (Customer customer : repository.findAll()) {
-				log.info(customer.toString());
+		List<Todo> todos = new ArrayList<>();
+		for (int i = 0; i < 20; i++) {
+			todos.add(new Todo("todo no " + i, "something meaningfull with detail no" + i));
+		}
+
+		todoRepo.save(todos);
+
+		// save a couple of categories
+		BookCategory categoryA = new BookCategory("Category A");
+		Set bookAs = new HashSet<Book>() {
+			{
+				add(new Book("Book A1", categoryA));
+				add(new Book("Book A2", categoryA));
+				add(new Book("Book A3", categoryA));
 			}
-			log.info("");
-
-			// fetch an individual customer by ID
-			Customer customer = repository.findOne(1L);
-			log.info("Customer found with findOne(1L):");
-			log.info("--------------------------------");
-			log.info(customer.toString());
-			log.info("");
-
-			// fetch customers by last name
-			log.info("Customer found with findByLastName('Bauer'):");
-			log.info("--------------------------------------------");
-			for (Customer bauer : repository.findByLastName("Bauer")) {
-				log.info(bauer.toString());
-			}
-			log.info("");
 		};
+		categoryA.setBooks(bookAs);
+
+		BookCategory categoryB = new BookCategory("Category B");
+		Set bookBs = new HashSet<Book>() {
+			{
+				add(new Book("Book B1", categoryB));
+				add(new Book("Book B2", categoryB));
+				add(new Book("Book B3", categoryB));
+			}
+		};
+		categoryB.setBooks(bookBs);
+
+		bookCategoryRepository.save(new HashSet<BookCategory>() {
+			{
+				add(categoryA);
+				add(categoryB);
+			}
+		});
+
 	}
 }

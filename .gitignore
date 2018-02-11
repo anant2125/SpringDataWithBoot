@@ -1,0 +1,6 @@
+/build/
+/bin/
+/.classpath
+/.project
+/~.mv.db
+/~.trace.db
